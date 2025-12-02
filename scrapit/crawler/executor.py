@@ -145,29 +145,11 @@ class CrawlExecutor:
             logger.info(f"Subprocess stderr length: {len(stderr_text)} bytes")
 
             if stdout_text:
-                # Log first and last 500 chars of stdout for debugging
-                preview = (
-                    stdout_text[:500]
-                    if len(stdout_text) <= 500
-                    else stdout_text[:500] + "..."
-                )
-                logger.debug(f"Subprocess stdout preview (first 500 chars): {preview}")
-                if len(stdout_text) > 500:
-                    suffix = stdout_text[-500:]
-                    logger.debug(
-                        f"Subprocess stdout suffix (last 500 chars): ...{suffix}"
-                    )
+                logger.debug(f"Subprocess stdout: {stdout_text}")
 
             if stderr_text:
-                # Log stderr for debugging
-                stderr_preview = (
-                    stderr_text[:1000]
-                    if len(stderr_text) <= 1000
-                    else stderr_text[:1000] + "..."
-                )
-                logger.warning(f"Subprocess stderr: {stderr_preview}")
+                logger.warning(f"Subprocess stderr: {stderr_text}")
 
-            # Check return code
             if process.returncode != 0:
                 error_msg = stderr_text or stdout_text or "Unknown error occurred"
                 logger.error(
