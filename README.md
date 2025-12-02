@@ -140,10 +140,10 @@ This implementation maintains 100% compatibility with ScrapyRT v0.12:
 
 ## Architecture
 
-- **API Layer** (`scrapi/api/`): FastAPI endpoints and request/response models
-- **Crawler Orchestration** (`scrapi/crawler/`): Spider discovery, execution, and response building
-- **Subprocess Worker** (`scrapi/utils/scrapy_runner.py`): Standalone script that runs spiders in isolated processes
-- **CLI** (`scrapi/main.py`): Command-line interface for starting the server
+- **API Layer** (`scrapit/api/`): FastAPI endpoints and request/response models
+- **Crawler Orchestration** (`scrapit/crawler/`): Spider discovery, execution, and response building
+- **Subprocess Worker** (`scrapit/utils/scrapy_runner.py`): Standalone script that runs spiders in isolated processes
+- **CLI** (`scrapit/main.py`): Command-line interface for starting the server
 
 ## Requirements
 
@@ -164,7 +164,7 @@ Add it as a local dependency in your other project's `pyproject.toml`:
 ```toml
 [project]
 dependencies = [
-    "scrapit @ file:///absolute/path/to/scrapi-api",
+    "scrapit @ file:///absolute/path/to/scrapit-api",
     # ... other dependencies
 ]
 ```
@@ -173,7 +173,7 @@ dependencies = [
 ```toml
 [project]
 dependencies = [
-    "scrapit @ file:///${PROJECT_ROOT}/../scrapi-api",
+    "scrapit @ file:///${PROJECT_ROOT}/../scrapit-api",
     # ... other dependencies
 ]
 ```
@@ -181,7 +181,7 @@ dependencies = [
 **Example:** If your projects are structured like:
 ```
 /path/to/projects/
-├── scrapi-api/
+├── scrapit-api/
 └── your-other-project/
 ```
 
@@ -189,7 +189,7 @@ Then in `your-other-project/pyproject.toml`:
 ```toml
 [project]
 dependencies = [
-    "scrapit @ file:///${PROJECT_ROOT}/../scrapi-api",
+    "scrapit @ file:///${PROJECT_ROOT}/../scrapit-api",
 ]
 ```
 
@@ -208,13 +208,13 @@ In your other project directory:
 
 ```bash
 # Using uv (recommended)
-uv pip install -e /absolute/path/to/scrapi-api
+uv pip install -e /absolute/path/to/scrapit-api
 
 # Or using pip
-pip install -e /absolute/path/to/scrapi-api
+pip install -e /absolute/path/to/scrapit-api
 
 # Example:
-# uv pip install -e /Users/farhad/Documents/Work/Dataak/DCP/scrapi-api
+# uv pip install -e /Users/farhad/Documents/Work/Dataak/DCP/scrapit-api
 ```
 
 **Note:** With this approach, you don't need to modify your `pyproject.toml`. The package will be installed in editable mode, so changes to `scrapit` will be reflected immediately.
@@ -228,7 +228,7 @@ If you want to manage both projects together, create a workspace:
 ```toml
 [tool.uv.workspace]
 members = [
-    "scrapi-api",
+    "scrapit-api",
     "your-other-project"
 ]
 ```

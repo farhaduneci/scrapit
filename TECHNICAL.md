@@ -43,7 +43,7 @@ scrapit is a FastAPI-based wrapper that provides a ScrapyRT-compatible API for e
 
 ## Component Details
 
-### 1. API Layer (`scrapi/api/`)
+### 1. API Layer (`scrapit/api/`)
 
 #### `endpoints.py`
 - **Purpose**: Handles HTTP requests and responses
@@ -63,7 +63,7 @@ scrapit is a FastAPI-based wrapper that provides a ScrapyRT-compatible API for e
   - `CrawlRequest`: Main request model with spider_name, start_requests, crawl_args
   - `CrawlResponse`: Response model matching ScrapyRT format (status, items, stats, errors, logs)
 
-### 2. Crawler Orchestration (`scrapi/crawler/`)
+### 2. Crawler Orchestration (`scrapit/crawler/`)
 
 #### `spider_loader.py`
 - **Purpose**: Discovers and validates Scrapy spiders
@@ -108,7 +108,7 @@ scrapit is a FastAPI-based wrapper that provides a ScrapyRT-compatible API for e
 5. Extract and parse that JSON object
 6. Verify it has expected structure
 
-### 3. Subprocess Worker (`scrapi/utils/scrapy_runner.py`)
+### 3. Subprocess Worker (`scrapit/utils/scrapy_runner.py`)
 
 - **Purpose**: Standalone script that runs in subprocess to execute spiders
 - **Key Features**:

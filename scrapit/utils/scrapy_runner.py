@@ -164,7 +164,7 @@ def run_spider(
 
         # Add item collector pipeline
         settings.set(
-            "ITEM_PIPELINES", {"scrapi.utils.scrapy_runner.ItemCollectorPipeline": 300}
+            "ITEM_PIPELINES", {"scrapit.utils.scrapy_runner.ItemCollectorPipeline": 300}
         )
         logger.debug("Item collector pipeline configured")
 

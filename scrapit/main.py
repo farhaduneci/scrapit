@@ -32,10 +32,10 @@ def setup_logging(debug: bool = False):
 
     # Set specific loggers to appropriate levels
     if debug:
-        logging.getLogger("scrapi").setLevel(logging.DEBUG)
+        logging.getLogger("scrapit").setLevel(logging.DEBUG)
         logging.getLogger("scrapy").setLevel(logging.INFO)  # Scrapy can be very verbose
     else:
-        logging.getLogger("scrapi").setLevel(logging.INFO)
+        logging.getLogger("scrapit").setLevel(logging.INFO)
         logging.getLogger("scrapy").setLevel(logging.WARNING)
 
 
