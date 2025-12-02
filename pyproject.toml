@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scrapit"
+version = "1.0.0"
+description = "FastAPI wrapper for Scrapy that lets you to test Scrapy spiders via the API."
+readme = "README.md"
+license = { file = "LICENCE" }
+requires-python = ">=3.9"
+authors = [{ name = "Farhad Uneci", email = "farhaduneci@gmail.com" }]
+keywords = ["fastapi", "scrapy", "scrapyrt", "api", "crawler", "spider"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.0.0",
+    "scrapy>=2.8.0",
+    "typer>=0.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/farhaduneci/scrapit"
+Repository = "https://github.com/farhaduneci/scrapit"
+Releases = "https://github.com/farhaduneci/scrapit/releases"
+Issues = "https://github.com/farhaduneci/scrapit/issues"
+
+[project.scripts]
+scrapit = "scrapit.main:cli"
+
+[project.optional-dependencies]
+dev = ["deptry>=0.23.0", "ruff>=0.11.4", "twine>=6.1.0"]
+
+[dependency-groups]
+dev = ["build>=1.3.0", "deptry>=0.23.0", "ruff>=0.11.4", "twine>=6.1.0"]
+
+[tool.setuptools]
+packages = ["scrapit", "scrapit.api", "scrapit.crawler", "scrapit.utils"]
+
+[tool.uv]
+package = true
