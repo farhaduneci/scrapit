@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scrapit"
-version = "1.0.1"
+version = "1.0.3"
 description = "FastAPI wrapper for Scrapy that lets you to test Scrapy spiders via the API."
 readme = "README.md"
 license = { file = "LICENCE" }
@@ -27,6 +27,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "scrapy>=2.8.0",
     "typer>=0.9.0",
+    "twine>=6.2.0",
 ]
 
 [project.urls]

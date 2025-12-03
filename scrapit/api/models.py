@@ -1,6 +1,7 @@
 """Pydantic models for ScrapyRT-compatible request/response schemas."""
 
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -24,12 +25,18 @@ class CrawlRequest(BaseModel):
     """
 
     spider_name: str = Field(..., description="Name of the spider to execute")
-    url: Optional[str] = Field(None, description="URL to crawl (deprecated, use request.url)")
-    start_requests: bool = Field(True, description="Whether to use spider's start_requests method")
+    url: Optional[str] = Field(
+        None, description="URL to crawl (deprecated, use request.url)"
+    )
+    start_requests: bool = Field(
+        True, description="Whether to use spider's start_requests method"
+    )
     crawl_args: Optional[Dict[str, Any]] = Field(
         default_factory=dict, description="Additional arguments to pass to the spider"
     )
-    request: Optional[RequestObject] = Field(None, description="Custom initial request object")
+    request: Optional[RequestObject] = Field(
+        None, description="Custom initial request object"
+    )
 
     class Config:
         """Pydantic config."""
@@ -41,10 +48,12 @@ class CrawlResponse(BaseModel):
     """ScrapyRT-compatible crawl response model."""
 
     status: str = Field(..., description="Status of the crawl: 'ok' or 'error'")
-    items: List[Dict[str, Any]] = Field(default_factory=list, description="Scraped items")
+    request_id: str = Field(..., description="Unique identifier for this request")
+    items: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Scraped items"
+    )
     stats: Dict[str, Any] = Field(default_factory=dict, description="Crawl statistics")
     errors: Optional[List[str]] = Field(None, description="List of error messages")
-    logs: Optional[List[str]] = Field(None, description="List of log messages")
 
     class Config:
         """Pydantic config."""
@@ -52,8 +61,8 @@ class CrawlResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "status": "ok",
+                "request_id": "123e4567-e89b-12d3-a456-426614174000",
                 "items": [{"title": "Example", "url": "http://example.com"}],
                 "stats": {"downloader/request_count": 1, "item_scraped_count": 1},
             }
         }
-

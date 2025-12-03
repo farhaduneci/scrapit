@@ -8,36 +8,9 @@ import typer
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from scrapit.api.endpoints import create_router
-
-
-# Configure logging
-def setup_logging(debug: bool = False):
-    """Configure logging based on debug mode.
-
-    Args:
-        debug: If True, set logging to DEBUG level with detailed formatting.
-    """
-    level = logging.DEBUG if debug else logging.INFO
-    if debug:
-        format_str = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-    else:
-        format_str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-    logging.basicConfig(
-        level=level,
-        format=format_str,
-        force=True,  # Override any existing configuration
-    )
-
-    # Set specific loggers to appropriate levels
-    if debug:
-        logging.getLogger("scrapit").setLevel(logging.DEBUG)
-        logging.getLogger("scrapy").setLevel(logging.INFO)  # Scrapy can be very verbose
-    else:
-        logging.getLogger("scrapit").setLevel(logging.INFO)
-        logging.getLogger("scrapy").setLevel(logging.WARNING)
-
+from scrapit.utils.logging_config import setup_logging_with_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +23,6 @@ def create_app(
     timeout: Optional[float] = None,
     additional_settings: Optional[Dict[str, Any]] = None,
     debug: bool = False,
-    include_logs: bool = True,
 ) -> FastAPI:
     """Create and configure FastAPI application.
 
@@ -59,7 +31,6 @@ def create_app(
         timeout: Default timeout for crawls.
         additional_settings: Additional Scrapy settings.
         debug: Enable debug mode with verbose logging.
-        include_logs: Whether to include logs in API responses.
 
     Returns:
         Configured FastAPI application.
@@ -67,7 +38,7 @@ def create_app(
     app = FastAPI(
         title="ScrapyRT-Compatible API",
         description="FastAPI wrapper for Scrapy spiders with ScrapyRT compatibility",
-        version="1.0.0",
+        version="1.0.3",
     )
 
     # Configure CORS
@@ -85,7 +56,6 @@ def create_app(
         timeout=timeout,
         additional_settings=additional_settings,
         debug=debug,
-        include_logs=include_logs,
     )
     app.include_router(router)
 
@@ -111,21 +81,15 @@ def run(
     debug: bool = typer.Option(
         False, "--debug", "-d", help="Enable debug mode with verbose logging"
     ),
-    include_logs: bool = typer.Option(
-        True,
-        "--include-logs/--no-logs",
-        help="Include logs in API responses (default: True)",
-    ),
 ):
     """Run the ScrapyRT-compatible API server.
 
     Example:
         scrapit -p 9080 -i 0.0.0.0 -s TIMEOUT_LIMIT=120
         scrapit -p 9080 --debug  # Enable debug logging
-        scrapit -p 9080 --no-logs  # Exclude logs from responses
     """
     # Setup logging based on debug mode
-    setup_logging(debug=debug)
+    setup_logging_with_request_id(debug=debug)
     # Parse additional settings
     additional_settings: Dict[str, Any] = {}
     if settings:
@@ -157,7 +121,6 @@ def run(
     logger.info(f"Host: {host}, Port: {port}")
     logger.info(f"Project path: {project_path}")
     logger.info(f"Debug mode: {debug}")
-    logger.info(f"Include logs in responses: {include_logs}")
     if additional_settings:
         logger.info(f"Additional settings: {additional_settings}")
     if timeout:
@@ -169,7 +132,6 @@ def run(
         timeout=timeout,
         additional_settings=additional_settings,
         debug=debug,
-        include_logs=include_logs,
     )
 
     # Run server

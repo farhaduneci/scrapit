@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from scrapit.crawler.response_builder import ResponseBuilder
+from scrapit.utils.logging_config import set_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ class CrawlExecutor:
         timeout: Optional[float] = None,
         additional_settings: Optional[Dict[str, Any]] = None,
         debug: bool = False,
-        include_logs: bool = True,
     ):
         """Initialize crawl executor.
 
@@ -32,16 +32,14 @@ class CrawlExecutor:
             timeout: Timeout for crawl execution in seconds.
             additional_settings: Additional Scrapy settings to apply.
             debug: Enable debug mode with verbose logging.
-            include_logs: Whether to include logs in API responses.
         """
         self.project_path = project_path or os.getcwd()
         self.timeout = timeout
         self.additional_settings = additional_settings or {}
         self.debug = debug
-        self.include_logs = include_logs
         self.response_builder = ResponseBuilder()
         logger.debug(
-            f"Initialized CrawlExecutor: project_path={self.project_path}, timeout={self.timeout}, debug={self.debug}, include_logs={self.include_logs}"
+            f"Initialized CrawlExecutor: project_path={self.project_path}, timeout={self.timeout}, debug={self.debug}"
         )
 
     async def execute_crawl(
@@ -50,6 +48,7 @@ class CrawlExecutor:
         start_requests: bool = True,
         crawl_args: Optional[Dict[str, Any]] = None,
         request_obj: Optional[Dict[str, Any]] = None,
+        request_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute a crawl in a subprocess.
 
@@ -58,10 +57,13 @@ class CrawlExecutor:
             start_requests: Whether to use spider's start_requests method.
             crawl_args: Additional arguments to pass to spider.
             request_obj: Custom request object.
+            request_id: Unique identifier for this request.
 
         Returns:
             ScrapyRT-compatible response dictionary.
         """
+        if request_id:
+            set_request_id(request_id)
         logger.info(
             f"Executing crawl: spider={spider_name}, start_requests={start_requests}"
         )
@@ -76,6 +78,7 @@ class CrawlExecutor:
             "project_path": self.project_path,
             "additional_settings": self.additional_settings,
             "debug": self.debug,
+            "request_id": request_id,
         }
 
         # Create temporary file for config
@@ -133,7 +136,8 @@ class CrawlExecutor:
                 process.kill()
                 await process.wait()
                 return self.response_builder.build_error_response(
-                    f"Crawl timed out after {self.timeout} seconds"
+                    f"Crawl timed out after {self.timeout} seconds",
+                    request_id=request_id,
                 )
 
             # Decode output
@@ -156,7 +160,8 @@ class CrawlExecutor:
                     f"Subprocess failed with return code {process.returncode}: {error_msg[:500]}"
                 )
                 return self.response_builder.build_error_response(
-                    f"Subprocess failed with return code {process.returncode}: {error_msg}"
+                    f"Subprocess failed with return code {process.returncode}: {error_msg}",
+                    request_id=request_id,
                 )
 
             # Parse output
@@ -177,7 +182,9 @@ class CrawlExecutor:
                 error_msg = f"Failed to parse subprocess output: {e}"
                 if stderr_text:
                     error_msg += f"\nStderr: {stderr_text[:500]}"
-                return self.response_builder.build_error_response(error_msg)
+                return self.response_builder.build_error_response(
+                    error_msg, request_id=request_id
+                )
 
             # Build response
             status = "error" if result.get("errors") else "ok"
@@ -187,15 +194,12 @@ class CrawlExecutor:
             if result.get("errors"):
                 logger.warning(f"Crawl errors: {result.get('errors')}")
 
-            # Filter logs based on include_logs setting
-            logs = result.get("logs") if self.include_logs else None
-
             response = self.response_builder.build_response(
                 items=result.get("items", []),
                 stats=result.get("stats", {}),
                 errors=result.get("errors"),
-                logs=logs,
                 status=status,
+                request_id=request_id,
             )
 
             if self.debug:
@@ -210,7 +214,8 @@ class CrawlExecutor:
         except Exception as e:
             logger.error(f"Executor error: {e}", exc_info=True)
             return self.response_builder.build_error_response(
-                f"Executor error: {str(e)}"
+                f"Executor error: {str(e)}",
+                request_id=request_id,
             )
         finally:
             # Clean up config file

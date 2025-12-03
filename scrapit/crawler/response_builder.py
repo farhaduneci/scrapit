@@ -15,8 +15,8 @@ class ResponseBuilder:
         items: List[Dict[str, Any]],
         stats: Dict[str, Any],
         errors: Optional[List[str]] = None,
-        logs: Optional[List[str]] = None,
         status: str = "ok",
+        request_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Build a ScrapyRT-compatible response.
 
@@ -24,23 +24,21 @@ class ResponseBuilder:
             items: List of scraped items.
             stats: Crawl statistics dictionary.
             errors: List of error messages (optional).
-            logs: List of log messages (optional).
             status: Response status ('ok' or 'error').
+            request_id: Unique identifier for this request.
 
         Returns:
             Dictionary matching ScrapyRT response format.
         """
         response: Dict[str, Any] = {
             "status": status,
+            "request_id": request_id or "",
             "items": items,
             "stats": stats,
         }
 
         if errors:
             response["errors"] = errors
-
-        if logs:
-            response["logs"] = logs
 
         return response
 
@@ -49,6 +47,7 @@ class ResponseBuilder:
         error_message: str,
         errors: Optional[List[str]] = None,
         stats: Optional[Dict[str, Any]] = None,
+        request_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Build an error response in ScrapyRT format.
 
@@ -56,6 +55,7 @@ class ResponseBuilder:
             error_message: Main error message.
             errors: Additional error messages (optional).
             stats: Partial stats if available (optional).
+            request_id: Unique identifier for this request.
 
         Returns:
             Error response dictionary.
@@ -66,6 +66,7 @@ class ResponseBuilder:
 
         response: Dict[str, Any] = {
             "status": "error",
+            "request_id": request_id or "",
             "items": [],
             "stats": stats or {},
             "errors": error_list,
@@ -81,7 +82,7 @@ class ResponseBuilder:
             output: JSON string from subprocess (may contain extra text).
 
         Returns:
-            Parsed dictionary with items, stats, errors, logs.
+            Parsed dictionary with items, stats, errors.
 
         Raises:
             ValueError: If output cannot be parsed.
@@ -105,7 +106,6 @@ class ResponseBuilder:
                 "items": data.get("items", []),
                 "stats": data.get("stats", {}),
                 "errors": data.get("errors"),
-                "logs": data.get("logs"),
             }
         except json.JSONDecodeError as e:
             logger.debug(
@@ -190,7 +190,6 @@ class ResponseBuilder:
                         "items": data.get("items", []),
                         "stats": data.get("stats", {}),
                         "errors": data.get("errors"),
-                        "logs": data.get("logs"),
                     }
                 else:
                     logger.warning("Extracted JSON doesn't have expected structure")
@@ -215,7 +214,6 @@ class ResponseBuilder:
                                     "items": data.get("items", []),
                                     "stats": data.get("stats", {}),
                                     "errors": data.get("errors"),
-                                    "logs": data.get("logs"),
                                 }
                         except json.JSONDecodeError:
                             continue

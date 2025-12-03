@@ -2,13 +2,16 @@
 
 import json
 import logging
+import uuid
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
+
 from scrapit.api.models import CrawlResponse
 from scrapit.crawler.executor import CrawlExecutor
 from scrapit.crawler.spider_loader import SpiderLoader
+from scrapit.utils.logging_config import set_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,6 @@ def create_router(
     timeout: Optional[float] = None,
     additional_settings: Optional[Dict[str, Any]] = None,
     debug: bool = False,
-    include_logs: bool = True,
 ) -> APIRouter:
     """Create API router with crawl endpoint.
 
@@ -27,7 +29,6 @@ def create_router(
         timeout: Default timeout for crawls.
         additional_settings: Additional Scrapy settings.
         debug: Enable debug mode with verbose logging.
-        include_logs: Whether to include logs in API responses.
 
     Returns:
         Configured APIRouter instance.
@@ -38,7 +39,6 @@ def create_router(
         timeout=timeout,
         additional_settings=additional_settings,
         debug=debug,
-        include_logs=include_logs,
     )
     spider_loader = SpiderLoader(project_path=project_path)
 
@@ -59,6 +59,8 @@ def create_router(
         Accepts parameters via both query parameters and JSON body.
         Body parameters take precedence over query parameters.
         """
+        request_id = str(uuid.uuid4())[:8]
+        set_request_id(request_id)
         logger.info("Received crawl request")
         logger.debug(
             f"Query parameters: spider_name={spider_name}, url={url}, start_requests={start_requests}, crawl_args={crawl_args}"
@@ -82,6 +84,7 @@ def create_router(
                         "status": "error",
                         "items": [],
                         "stats": {},
+                        "request_id": request_id,
                         "errors": ["Invalid JSON in crawl_args query parameter"],
                     },
                 )
@@ -108,6 +111,7 @@ def create_router(
                 status_code=400,
                 content={
                     "status": "error",
+                    "request_id": request_id,
                     "items": [],
                     "stats": {},
                     "errors": ["spider_name is required"],
@@ -126,6 +130,7 @@ def create_router(
                 status_code=404,
                 content={
                     "status": "error",
+                    "request_id": request_id,
                     "items": [],
                     "stats": {},
                     "errors": [
@@ -159,6 +164,7 @@ def create_router(
                 start_requests=start_requests_value,
                 crawl_args=crawl_args_value if crawl_args_value else None,
                 request_obj=request_obj,
+                request_id=request_id,
             )
             logger.info(
                 f"Crawl completed for spider: {spider_name_value}, status: {response.get('status')}"
@@ -175,6 +181,7 @@ def create_router(
                 status_code=500,
                 content={
                     "status": "error",
+                    "request_id": request_id,
                     "items": [],
                     "stats": {},
                     "errors": [f"Internal error: {str(e)}"],

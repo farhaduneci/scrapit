@@ -12,6 +12,8 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 
+from scrapit.utils.logging_config import set_request_id, setup_logging_with_request_id
+
 # Create logger for this module
 logger = logging.getLogger(__name__)
 
@@ -81,24 +83,6 @@ class ItemCollectorPipeline:
         return item
 
 
-class LogCaptureHandler(logging.Handler):
-    """Capture log messages for response."""
-
-    def __init__(self):
-        """Initialize log capture."""
-        super().__init__()
-        self.logs: List[str] = []
-
-    def emit(self, record):
-        """Emit a log record.
-
-        Args:
-            record: Log record.
-        """
-        log_message = self.format(record)
-        self.logs.append(log_message)
-
-
 def run_spider(
     spider_name: str,
     start_requests: bool = True,
@@ -107,6 +91,7 @@ def run_spider(
     project_path: Optional[str] = None,
     additional_settings: Optional[Dict[str, Any]] = None,
     debug: bool = False,
+    request_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run a Scrapy spider and collect results.
 
@@ -118,20 +103,24 @@ def run_spider(
         project_path: Path to Scrapy project (defaults to CWD).
         additional_settings: Additional Scrapy settings.
         debug: Enable debug mode with verbose logging.
+        request_id: Unique identifier for this request.
 
     Returns:
-        Dictionary with items, stats, errors, and logs.
+        Dictionary with items, stats, and errors.
     """
-    # Setup logging
+    # Set request ID in context
+    if request_id:
+        set_request_id(request_id)
+
+    # Setup logging with request ID support
+    setup_logging_with_request_id(debug=debug)
+
+    # Configure Scrapy logging (it may override our handlers, so we need to reapply)
     log_level = logging.DEBUG if debug else logging.INFO
     configure_logging(install_root_handler=False, settings={"LOG_LEVEL": log_level})
 
-    # Configure logging to capture logs
-    log_capture = LogCaptureHandler()
-    log_capture.setLevel(log_level)
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
-    root_logger.addHandler(log_capture)
+    # Reapply our logging configuration after Scrapy's configure_logging
+    setup_logging_with_request_id(debug=debug)
 
     # Set logger level
     logger.setLevel(log_level)
@@ -297,10 +286,8 @@ def run_spider(
                 crawl_stats = dict(process.crawlers[0].stats.get_stats())
                 logger.debug(f"Collected partial stats: {len(crawl_stats)} keys")
 
-        # Collect logs
-        logs = log_capture.logs
         logger.info(
-            f"Execution completed: items={len(collected_items)}, errors={len(errors)}, logs={len(logs) if logs else 0}"
+            f"Execution completed: items={len(collected_items)}, errors={len(errors)}"
         )
 
         if debug:
@@ -316,7 +303,6 @@ def run_spider(
             "items": serialized_items,
             "stats": serialized_stats,
             "errors": errors if errors else None,
-            "logs": logs if logs else None,
         }
     except Exception as e:
         logger.error(f"Fatal error in run_spider: {e}", exc_info=debug)
@@ -324,7 +310,6 @@ def run_spider(
             "items": [],
             "stats": {},
             "errors": [str(e)],
-            "logs": None,
         }
     finally:
         os.chdir(original_cwd)
@@ -350,6 +335,7 @@ def main():
     project_path = config.get("project_path")
     additional_settings = config.get("additional_settings")
     debug = config.get("debug", False)
+    request_id = config.get("request_id")
 
     # Run spider
     result = run_spider(
@@ -360,6 +346,7 @@ def main():
         project_path=project_path,
         additional_settings=additional_settings,
         debug=debug,
+        request_id=request_id,
     )
 
     # Output result as JSON with custom encoder for datetime objects

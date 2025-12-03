@@ -1456,12 +1456,13 @@ wheels = [
 
 [[package]]
 name = "scrapit"
-version = "1.0.0"
+version = "1.0.3"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "pydantic" },
     { name = "scrapy" },
+    { name = "twine" },
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -1490,6 +1491,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.4" },
     { name = "scrapy", specifier = ">=2.8.0" },
+    { name = "twine", specifier = ">=6.2.0" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=6.1.0" },
     { name = "typer", specifier = ">=0.9.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0" },
